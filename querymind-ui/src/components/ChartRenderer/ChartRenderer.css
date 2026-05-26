@@ -1,0 +1,45 @@
+/* ============================================
+   ChartRenderer Component (Premium)
+   ============================================ */
+
+.chart-container {
+  width: 100%;
+  padding: 16px 0;
+  border-radius: var(--radius-md);
+  background: linear-gradient(180deg, rgba(0, 255, 136, 0.02), transparent);
+}
+
+.chart-title {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-bottom: 12px;
+  padding-left: 4px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.chart-title::before {
+  content: '';
+  width: 3px;
+  height: 16px;
+  background: linear-gradient(180deg, var(--neon-green), var(--neon-cyan));
+  border-radius: 2px;
+}
+
+.chart-empty {
+  padding: 32px;
+  text-align: center;
+  color: var(--text-muted);
+  font-size: 0.85rem;
+}
+
+/* Recharts overrides */
+.recharts-cartesian-grid-horizontal line,
+.recharts-cartesian-grid-vertical line {
+  stroke: var(--border-subtle);
+}
+
+.recharts-text { fill: var(--text-secondary); }
+.recharts-tooltip-wrapper { z-index: 10; }

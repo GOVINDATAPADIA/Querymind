@@ -1,0 +1,65 @@
+/* ============================================
+   DataTable Component (Premium)
+   ============================================ */
+
+.datatable-wrapper {
+  width: 100%;
+  overflow-x: auto;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border-subtle);
+  background: var(--bg-primary);
+}
+
+.datatable {
+  width: 100%;
+  border-collapse: collapse;
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
+}
+
+.datatable thead { position: sticky; top: 0; z-index: 1; }
+
+.datatable th {
+  padding: 12px 16px;
+  text-align: left;
+  font-weight: 600;
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: var(--neon-green);
+  background: linear-gradient(180deg, var(--bg-tertiary), var(--bg-secondary));
+  border-bottom: 1px solid var(--border-accent);
+  white-space: nowrap;
+  text-shadow: 0 0 8px rgba(0, 255, 136, 0.15);
+}
+
+.datatable td {
+  padding: 10px 16px;
+  color: var(--text-secondary);
+  border-bottom: 1px solid var(--border-subtle);
+  white-space: nowrap;
+  max-width: 300px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  transition: color var(--transition-fast);
+}
+
+.datatable tbody tr {
+  transition: background var(--transition-fast), box-shadow var(--transition-fast);
+}
+
+.datatable tbody tr:nth-child(even) { background: rgba(20, 20, 42, 0.3); }
+
+.datatable tbody tr:hover {
+  background: var(--bg-hover);
+  box-shadow: inset 3px 0 0 var(--neon-green);
+}
+.datatable tbody tr:hover td { color: var(--text-primary); }
+
+.datatable-empty {
+  padding: 40px;
+  text-align: center;
+  color: var(--text-muted);
+  font-size: 0.85rem;
+  font-style: italic;
+}

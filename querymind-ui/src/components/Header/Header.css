@@ -1,0 +1,106 @@
+/* ============================================
+   Header Component (Premium)
+   ============================================ */
+
+.header {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  height: var(--header-height);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 20px;
+  background: var(--bg-glass);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-bottom: 1px solid var(--border-default);
+  box-shadow: var(--glow-border-bottom);
+}
+
+.header-left { display: flex; align-items: center; gap: 14px; }
+
+.sidebar-toggle-btn {
+  display: flex; align-items: center; justify-content: center;
+  width: 38px; height: 38px;
+  border-radius: var(--radius-md);
+  color: var(--text-secondary);
+  transition: all var(--transition-fast);
+}
+.sidebar-toggle-btn:hover {
+  color: var(--neon-green);
+  background: var(--bg-hover);
+  box-shadow: var(--glow-green);
+  transform: scale(1.05);
+}
+
+.header-logo { display: flex; align-items: center; gap: 10px; }
+
+.header-logo-icon {
+  color: var(--neon-green);
+  filter: drop-shadow(0 0 8px rgba(0, 255, 136, 0.5));
+  animation: pulse 3s ease-in-out infinite;
+}
+
+.header-logo-text {
+  font-size: 1.25rem;
+  font-weight: 700;
+  letter-spacing: 1.5px;
+  background: linear-gradient(135deg, var(--neon-green), var(--neon-cyan));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  animation: textGlow 4s ease-in-out infinite;
+  user-select: none;
+}
+
+.header-right { display: flex; align-items: center; gap: 14px; }
+
+.health-indicator {
+  display: flex; align-items: center; gap: 8px;
+  padding: 6px 14px;
+  border-radius: 100px;
+  background: var(--bg-tertiary);
+  border: 1px solid var(--border-subtle);
+  font-size: 0.7rem; font-weight: 600;
+  letter-spacing: 0.8px;
+  text-transform: uppercase;
+  transition: all var(--transition-fast);
+}
+.health-indicator:hover { border-color: var(--border-accent); }
+
+.health-dot {
+  width: 8px; height: 8px;
+  border-radius: 50%; flex-shrink: 0;
+}
+.health-dot--connected {
+  background: var(--neon-green);
+  box-shadow: 0 0 6px rgba(0, 255, 136, 0.6);
+  animation: pulseGlow 2s ease-in-out infinite;
+}
+.health-dot--offline {
+  background: var(--danger);
+  box-shadow: 0 0 6px rgba(255, 71, 87, 0.6);
+  animation: pulse 1.5s ease-in-out infinite;
+}
+.health-text--connected { color: var(--neon-green); }
+.health-text--offline { color: var(--danger); }
+
+.theme-toggle-btn {
+  display: flex; align-items: center; justify-content: center;
+  width: 38px; height: 38px;
+  border-radius: var(--radius-md);
+  color: var(--text-secondary);
+  transition: all var(--transition-fast);
+}
+.theme-toggle-btn:hover {
+  color: var(--neon-cyan);
+  background: var(--bg-hover);
+  transform: rotate(20deg) scale(1.05);
+  box-shadow: var(--glow-cyan);
+}
+
+@media (max-width: 640px) {
+  .health-indicator { padding: 4px 10px; font-size: 0.65rem; }
+  .header-logo-text { font-size: 1.05rem; }
+}

@@ -1,0 +1,145 @@
+"""Tests for the FastAPI API endpoints."""
+
+import pytest
+import pytest_asyncio
+from unittest.mock import AsyncMock, patch, MagicMock
+from httpx import AsyncClient, ASGITransport
+
+
+@pytest_asyncio.fixture
+async def client():
+    """Create an async test client with DB connections mocked out."""
+    with patch("db.connection.get_engine") as mock_engine, \
+         patch("db.connection.check_db_health", new_callable=AsyncMock, return_value=True):
+        mock_engine.return_value = MagicMock()
+        from main import app
+
+        transport = ASGITransport(app=app)
+        async with AsyncClient(transport=transport, base_url="http://test") as ac:
+            yield ac
+
+
+class TestHealthEndpoint:
+    """Test GET /health."""
+
+    @pytest.mark.asyncio
+    async def test_health_returns_200(self, client):
+        with patch("api.routes.health.check_db_health", new_callable=AsyncMock, return_value=True), \
+             patch("api.routes.health.check_llm_health", new_callable=AsyncMock, return_value=True):
+            response = await client.get("/health")
+            assert response.status_code == 200
+            data = response.json()
+            assert data["status"] == "ok"
+            assert data["db_connected"] is True
+            assert data["llm_connected"] is True
+
+    @pytest.mark.asyncio
+    async def test_health_degraded_without_db(self, client):
+        with patch("api.routes.health.check_db_health", new_callable=AsyncMock, return_value=False), \
+             patch("api.routes.health.check_llm_health", new_callable=AsyncMock, return_value=False):
+            response = await client.get("/health")
+            assert response.status_code == 200
+            data = response.json()
+            assert data["status"] == "degraded"
+            assert data["db_connected"] is False
+
+
+class TestSchemaEndpoint:
+    """Test GET /schema."""
+
+    @pytest.mark.asyncio
+    async def test_schema_returns_200(self, client, mock_schema):
+        with patch("api.routes.schema.get_engine") as mock_eng, \
+             patch("api.routes.schema.get_cached_schema", new_callable=AsyncMock, return_value=mock_schema):
+            mock_eng.return_value = MagicMock()
+            response = await client.get("/schema")
+            assert response.status_code == 200
+            data = response.json()
+            assert "tables" in data
+            assert "total_columns" in data
+            assert len(data["tables"]) > 0
+
+    @pytest.mark.asyncio
+    async def test_schema_503_on_db_failure(self, client):
+        with patch("api.routes.schema.get_engine", side_effect=Exception("DB down")):
+            response = await client.get("/schema")
+            assert response.status_code == 503
+
+
+class TestQueryEndpoint:
+    """Test POST /query."""
+
+    @pytest.mark.asyncio
+    async def test_query_returns_200(self, client):
+        mock_final = {
+            "sql_generated": "SELECT * FROM products LIMIT 5",
+            "result_table": [{"name": "Widget", "price": 9.99}],
+            "plain_english": "Found 1 product.",
+            "chart_suggestion": None,
+            "follow_up_suggestions": ["What else?"],
+            "retry_count": 0,
+            "execution_time_ms": 100,
+            "session_id": "test",
+        }
+
+        mock_graph = AsyncMock()
+        mock_graph.ainvoke = AsyncMock(
+            return_value={"final_response": mock_final}
+        )
+
+        with patch("api.routes.query.get_compiled_graph", return_value=mock_graph):
+            response = await client.post(
+                "/query",
+                json={"question": "Show me products"},
+                headers={"X-Session-ID": "test-session-123"},
+            )
+            assert response.status_code == 200
+            data = response.json()
+            assert "sql_generated" in data
+            assert "plain_english" in data
+            assert data["session_id"] != ""
+
+    @pytest.mark.asyncio
+    async def test_query_auto_generates_session_id(self, client):
+        mock_graph = AsyncMock()
+        mock_graph.ainvoke = AsyncMock(
+            return_value={
+                "final_response": {
+                    "sql_generated": "",
+                    "result_table": [],
+                    "plain_english": "",
+                    "chart_suggestion": None,
+                    "follow_up_suggestions": [],
+                    "retry_count": 0,
+                    "execution_time_ms": 0,
+                    "session_id": "",
+                }
+            }
+        )
+
+        with patch("api.routes.query.get_compiled_graph", return_value=mock_graph):
+            response = await client.post(
+                "/query",
+                json={"question": "Show me products"},
+                # No X-Session-ID header supplied
+            )
+            assert response.status_code == 200
+            data = response.json()
+            # Session ID was auto-generated by the server
+            assert data["session_id"] is not None
+            assert len(data["session_id"]) > 0
+
+    @pytest.mark.asyncio
+    async def test_query_422_on_empty_question(self, client):
+        response = await client.post("/query", json={"question": ""})
+        assert response.status_code == 422
+
+    @pytest.mark.asyncio
+    async def test_query_422_on_missing_body(self, client):
+        response = await client.post("/query")
+        assert response.status_code == 422
+
+    @pytest.mark.asyncio
+    async def test_query_422_on_short_question(self, client):
+        response = await client.post("/query", json={"question": "Hi"})
+        assert response.status_code == 422

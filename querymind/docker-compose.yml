@@ -1,0 +1,43 @@
+
+services:
+  postgres:
+    image: postgres:15
+    environment:
+      POSTGRES_DB: querymind
+      POSTGRES_USER: querymind
+      POSTGRES_PASSWORD: querymind
+    ports:
+      - "5433:5432"  # Use 5433 to avoid conflicts with host postgres
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ./db/seeds/sample_data.sql:/docker-entrypoint-initdb.d/01-seed.sql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U querymind"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  querymind-api:
+    build: .
+    ports:
+      - "8000:8000"
+    env_file:
+      - .env
+    environment:
+      - DATABASE_URL=postgresql+asyncpg://querymind:querymind@postgres:5432/querymind
+    depends_on:
+      postgres:
+        condition: service_healthy
+    volumes:
+      - .:/app  # Hot reload in dev
+    command: uvicorn main:app --host 0.0.0.0 --port 8000 --reload
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/health')"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 15s
+
+volumes:
+  pgdata:
+    name: querymind_pgdata
