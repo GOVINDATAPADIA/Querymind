@@ -261,6 +261,8 @@ def _build_result_summary(df: pd.DataFrame | None) -> str:
 
 async def interpret_result_node(state: AgentState) -> dict:
     """Translate the SQL query results into a plain-English answer."""
+    import re  # Ensure re is imported for regex stripping
+    
     df = state.get("query_result")
     result_summary = _build_result_summary(df)
 
@@ -275,8 +277,12 @@ async def interpret_result_node(state: AgentState) -> dict:
             }),
             timeout=30,
         )
+        
+        # Strip internal <think>...</think> reasoning tags from models like Qwen/DeepSeek
+        clean_answer = re.sub(r"<think>.*?</think>", "", response.content, flags=re.DOTALL).strip()
+        
         logger.info("Result interpretation completed.")
-        return {"plain_english_answer": response.content}
+        return {"plain_english_answer": clean_answer}
 
     except Exception as exc:
         logger.error("Result interpretation LLM call failed: %s", exc, exc_info=True)

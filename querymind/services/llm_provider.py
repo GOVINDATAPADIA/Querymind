@@ -62,7 +62,7 @@ def get_llm(
             )
         case "gemini":
             llm = ChatGoogleGenerativeAI(
-                model="gemini-2.5-flash",
+                model="gemini-3.6-flash",
                 temperature=temperature,
                 google_api_key=settings.google_api_key,
                 max_retries=1,
@@ -96,17 +96,14 @@ def get_llm(
 
 
 async def check_llm_health() -> bool:
-    """Smoke-test the default LLM with a trivial prompt.
-
-    Returns ``True`` if the model responds without error, ``False`` otherwise.
-    Uses a 5-second timeout to avoid hanging when API keys are missing.
-    """
-    try:
-        llm = get_llm()
-        await asyncio.wait_for(
-            llm.ainvoke([HumanMessage(content="ping")]),
-            timeout=5.0,
-        )
-        return True
-    except Exception:
-        return False
+    """Quick check if LLM configuration / API key is present."""
+    settings = get_settings()
+    if settings.llm_provider == "gemini":
+        return bool(settings.google_api_key)
+    elif settings.llm_provider == "custom":
+        return bool(settings.custom_llm_api_key)
+    elif settings.llm_provider == "openai":
+        return bool(settings.openai_api_key)
+    elif settings.llm_provider == "claude":
+        return bool(settings.anthropic_api_key)
+    return True

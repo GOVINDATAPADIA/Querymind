@@ -248,21 +248,23 @@ def validate_sql(sql: str) -> SafetyResult:
 
 
 def sanitize_sql_output(sql: str) -> str:
-    """Clean raw LLM output to extract a plain SQL string.
-
-    Strips leading/trailing whitespace, markdown code fences, and backticks
-    that models commonly wrap their SQL output in.
-    """
+    """Clean raw LLM output to extract a clean SQL query without trailing semicolons."""
     cleaned = sql.strip()
 
-    # Remove markdown code fences (```sql ... ``` or ``` ... ```)
-    cleaned = re.sub(r"^```(?:sql)?\s*\n?", "", cleaned, flags=re.IGNORECASE)
-    cleaned = re.sub(r"\n?```\s*$", "", cleaned)
+    # 1. Remove <think>...</think> reasoning tags
+    cleaned = re.sub(r"<think>.*?</think>", "", cleaned, flags=re.DOTALL | re.IGNORECASE).strip()
 
-    # Remove stray backticks wrapping the entire string
-    cleaned = cleaned.strip("`")
+    # 2. Extract from markdown code fences if wrapped
+    match = re.search(r"```(?:sql)?\s*(.*?)\s*```", cleaned, flags=re.DOTALL | re.IGNORECASE)
+    if match:
+        cleaned = match.group(1).strip()
 
-    # Final whitespace pass
-    cleaned = cleaned.strip()
+    # 3. Find SELECT keyword
+    select_idx = cleaned.upper().find("SELECT")
+    if select_idx != -1:
+        cleaned = cleaned[select_idx:]
+
+    # 4. Remove trailing semicolon (so safety validator won't flag it as stacked query)
+    cleaned = cleaned.rstrip(";").strip()
 
     return cleaned
