@@ -4,7 +4,7 @@ import Sidebar from './components/Sidebar/Sidebar';
 import ChatInterface from './components/ChatInterface/ChatInterface';
 import './App.css';
 
-const API_BASE = 'http://localhost:8000';
+const API_BASE = 'https://query-backend.up.railway.app/';
 
 function App() {
   // ── State ────────────────────────────────────
@@ -94,11 +94,11 @@ function App() {
         prev.map((msg) =>
           msg.id === assistantId
             ? {
-                ...msg,
-                content: data.plain_english,
-                data: data, // full API response for ResponseCard
-                isLoading: false,
-              }
+              ...msg,
+              content: data.plain_english,
+              data: data, // full API response for ResponseCard
+              isLoading: false,
+            }
             : msg
         )
       );
@@ -107,12 +107,12 @@ function App() {
         prev.map((msg) =>
           msg.id === assistantId
             ? {
-                ...msg,
-                content:
-                  'Something went wrong. Please check your connection and try again.',
-                isLoading: false,
-                isError: true,
-              }
+              ...msg,
+              content:
+                'Something went wrong. Please check your connection and try again.',
+              isLoading: false,
+              isError: true,
+            }
             : msg
         )
       );
