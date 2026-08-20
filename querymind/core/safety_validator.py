@@ -135,11 +135,15 @@ def _check_statement_type(parsed: list[Statement]) -> SafetyResult | None:
             continue
 
         if stmt_type and stmt_type.upper() != "SELECT":
-            return SafetyResult(
-                is_safe=False,
-                reason=f"Only SELECT statements are allowed (got {stmt_type}).",
-                risk_level="critical",
-            )
+            # sqlparse classifies CTEs (WITH ... SELECT ...) as UNKNOWN; allow if starts with WITH and contains SELECT
+            stmt_str = str(stmt).strip().upper()
+            is_cte_select = stmt_str.startswith("WITH") and "SELECT" in stmt_str
+            if not is_cte_select:
+                return SafetyResult(
+                    is_safe=False,
+                    reason=f"Only SELECT statements are allowed (got {stmt_type}).",
+                    risk_level="critical",
+                )
 
         # Walk tokens for DDL / DML keywords that sqlparse may not surface
         for token in stmt.flatten():
@@ -248,7 +252,7 @@ def validate_sql(sql: str) -> SafetyResult:
 
 
 def sanitize_sql_output(sql: str) -> str:
-    """Clean raw LLM output to extract a clean SQL query without trailing semicolons."""
+    """Clean raw LLM output to extract a clean SQL query."""
     cleaned = sql.strip()
 
     # 1. Remove <think>...</think> reasoning tags
@@ -259,12 +263,22 @@ def sanitize_sql_output(sql: str) -> str:
     if match:
         cleaned = match.group(1).strip()
 
-    # 3. Find SELECT keyword
+    # 3. Find starting keyword: WITH or SELECT (whichever appears first)
+    with_idx = cleaned.upper().find("WITH")
     select_idx = cleaned.upper().find("SELECT")
-    if select_idx != -1:
-        cleaned = cleaned[select_idx:]
 
-    # 4. Remove trailing semicolon (so safety validator won't flag it as stacked query)
+    start_idx = -1
+    if with_idx != -1 and select_idx != -1:
+        start_idx = min(with_idx, select_idx)
+    elif with_idx != -1:
+        start_idx = with_idx
+    elif select_idx != -1:
+        start_idx = select_idx
+
+    if start_idx != -1:
+        cleaned = cleaned[start_idx:]
+
+    # 4. Remove trailing semicolons
     cleaned = cleaned.rstrip(";").strip()
 
     return cleaned
