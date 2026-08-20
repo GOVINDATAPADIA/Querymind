@@ -4,7 +4,7 @@ import Sidebar from './components/Sidebar/Sidebar';
 import ChatInterface from './components/ChatInterface/ChatInterface';
 import './App.css';
 
-const API_BASE = 'https://query-backend.up.railway.app/';
+const API_BASE = 'https://query-backend.up.railway.app';
 
 function App() {
   // ── State ────────────────────────────────────
