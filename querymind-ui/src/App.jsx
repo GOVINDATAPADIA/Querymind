@@ -6,7 +6,7 @@ import './App.css';
 
 const API_BASE = 'https://query-backend.up.railway.app';
 
-function App() {
+export default function App() {
   // ── State ────────────────────────────────────
   const [theme, setTheme] = useState(() => {
     return localStorage.getItem('querymind-theme') || 'dark';
@@ -38,7 +38,6 @@ function App() {
     try {
       const res = await fetch(`${API_BASE}/health`);
       const data = await res.json();
-      // data = { status: "ok", db_connected: true, llm_connected: false }
       const connected = data.status === 'ok' && data.db_connected;
       setHealthStatus(connected ? 'connected' : 'offline');
     } catch {
@@ -51,8 +50,15 @@ function App() {
     try {
       const res = await fetch(`${API_BASE}/schema`);
       const data = await res.json();
-      // data = { tables: [{name, columns, ...}], relationships: [...] }
-      setSchema(data.tables || []);
+      if (data.tables && Array.isArray(data.tables)) {
+        setSchema(data.tables);
+      } else if (Array.isArray(data)) {
+        setSchema(data);
+      } else if (typeof data === 'object') {
+        setSchema(data);
+      } else {
+        setSchema([]);
+      }
     } catch {
       setSchema([]);
     }
@@ -60,22 +66,28 @@ function App() {
 
   // ── Send Query ───────────────────────────────
   const sendQuery = useCallback(async (question) => {
+    const timeStr = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+
     // Add user message
     const userMessage = {
       id: Date.now(),
+      type: 'user',
       role: 'user',
+      text: question,
       content: question,
-      timestamp: new Date().toISOString(),
+      timestamp: timeStr,
     };
 
     // Add placeholder assistant message (loading)
     const assistantId = Date.now() + 1;
     const loadingMessage = {
       id: assistantId,
+      type: 'assistant',
       role: 'assistant',
+      text: null,
       content: null,
       isLoading: true,
-      timestamp: new Date().toISOString(),
+      timestamp: timeStr,
     };
 
     setMessages((prev) => [...prev, userMessage, loadingMessage]);
@@ -87,6 +99,11 @@ function App() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ question }),
       });
+
+      if (!res.ok) {
+        throw new Error(`HTTP ${res.status}: Failed to execute query`);
+      }
+
       const data = await res.json();
 
       // Replace loading message with actual response
@@ -94,11 +111,14 @@ function App() {
         prev.map((msg) =>
           msg.id === assistantId
             ? {
-              ...msg,
-              content: data.plain_english,
-              data: data, // full API response for ResponseCard
-              isLoading: false,
-            }
+                ...msg,
+                type: 'assistant',
+                role: 'assistant',
+                text: data.plain_english,
+                content: data.plain_english,
+                data: data, // full API response for ResponseCard
+                isLoading: false,
+              }
             : msg
         )
       );
@@ -107,12 +127,14 @@ function App() {
         prev.map((msg) =>
           msg.id === assistantId
             ? {
-              ...msg,
-              content:
-                'Something went wrong. Please check your connection and try again.',
-              isLoading: false,
-              isError: true,
-            }
+                ...msg,
+                type: 'assistant',
+                role: 'assistant',
+                error:
+                  error.message || 'Something went wrong. Please check your connection and try again.',
+                isLoading: false,
+                isError: true,
+              }
             : msg
         )
       );
@@ -130,6 +152,11 @@ function App() {
     },
     [isLoading, sendQuery]
   );
+
+  // ── Clear Chat / History ─────────────────────
+  const handleClearChat = useCallback(() => {
+    setMessages([]);
+  }, []);
 
   // ── Initial Data Fetch ───────────────────────
   useEffect(() => {
@@ -183,6 +210,8 @@ function App() {
             onSelectQuery={handleFollowUpClick}
             activeTab={sidebarTab}
             onTabChange={setSidebarTab}
+            onRefreshSchema={fetchSchema}
+            onClearHistory={handleClearChat}
           />
         </div>
 
@@ -192,11 +221,10 @@ function App() {
             onSendMessage={sendQuery}
             isLoading={isLoading}
             onFollowUpClick={handleFollowUpClick}
+            onClearChat={handleClearChat}
           />
         </main>
       </div>
     </div>
   );
 }
-
-export default App;

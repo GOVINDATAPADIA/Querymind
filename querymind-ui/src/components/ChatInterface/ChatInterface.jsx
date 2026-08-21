@@ -1,14 +1,14 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
-import { Send, Database, Sparkles } from 'lucide-react';
+import { Send, Database, Sparkles, CornerDownLeft, Trash2, Bot } from 'lucide-react';
 import ResponseCard from '../ResponseCard/ResponseCard';
 import './ChatInterface.css';
 
 const EXAMPLE_QUESTIONS = [
-  'Show me the top 10 customers by revenue',
-  'What were total sales last month?',
-  'List all products with low inventory',
-  'Compare revenue across regions',
-  'Show the average order value by category',
+  { text: 'Show me the top 5 customers by total spend', category: 'Customers' },
+  { text: 'Compare revenue across product categories', category: 'Revenue' },
+  { text: 'What were total sales last month by region?', category: 'Sales' },
+  { text: 'List products with low inventory under 20 units', category: 'Inventory' },
+  { text: 'What is the average order value across regions?', category: 'Analytics' },
 ];
 
 function TypingIndicator() {
@@ -16,9 +16,13 @@ function TypingIndicator() {
     <div className="chat-message chat-message--assistant">
       <div className="chat-message-bubble">
         <div className="typing-indicator">
-          <div className="typing-dot" />
-          <div className="typing-dot" />
-          <div className="typing-dot" />
+          <Bot size={16} className="typing-bot-icon" />
+          <span>Generating query and analyzing data</span>
+          <div className="typing-dots">
+            <div className="typing-dot" />
+            <div className="typing-dot" />
+            <div className="typing-dot" />
+          </div>
         </div>
       </div>
     </div>
@@ -28,21 +32,24 @@ function TypingIndicator() {
 function WelcomeScreen({ onChipClick }) {
   return (
     <div className="chat-welcome">
-      <Database size={48} className="chat-welcome-icon" />
+      <div className="chat-welcome-icon-wrapper">
+        <Database size={48} className="chat-welcome-icon" />
+      </div>
       <div className="chat-welcome-title">Welcome to QueryMind</div>
       <p className="chat-welcome-subtitle">
-        Ask questions about your database in plain English. I'll generate SQL,
-        run it, and present the results with charts and insights.
+        Ask questions about your database in plain English. I will generate SQL,
+        execute it securely, and return data tables, charts, and business insights.
       </p>
       <div className="chat-welcome-chips">
         {EXAMPLE_QUESTIONS.map((q, idx) => (
           <button
             key={idx}
             className="chat-welcome-chip"
-            onClick={() => onChipClick(q)}
+            onClick={() => onChipClick(q.text)}
           >
-            <Sparkles size={13} style={{ marginRight: 6, verticalAlign: -2 }} />
-            {q}
+            <Sparkles size={12} className="chat-welcome-chip-icon" />
+            <span className="chat-welcome-chip-text">{q.text}</span>
+            <span className="chat-welcome-chip-tag">{q.category}</span>
           </button>
         ))}
       </div>
@@ -55,28 +62,30 @@ export default function ChatInterface({
   onSendMessage,
   isLoading,
   onFollowUpClick,
+  onClearChat,
 }) {
   const [input, setInput] = useState('');
   const messagesEndRef = useRef(null);
   const textareaRef = useRef(null);
 
-  // Auto-scroll to bottom when messages change
-  useEffect(() => {
+  // Auto-scroll to bottom on new messages
+  const scrollToBottom = useCallback(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [messages]);
-
-  // Auto-resize textarea
-  const autoResize = useCallback(() => {
-    const el = textareaRef.current;
-    if (el) {
-      el.style.height = 'auto';
-      el.style.height = Math.min(el.scrollHeight, 84) + 'px';
-    }
   }, []);
 
   useEffect(() => {
-    autoResize();
-  }, [input, autoResize]);
+    scrollToBottom();
+  }, [messages, isLoading, scrollToBottom]);
+
+  // Auto-resize textarea
+  const handleInputChange = (e) => {
+    setInput(e.target.value);
+    const textarea = textareaRef.current;
+    if (textarea) {
+      textarea.style.height = 'auto';
+      textarea.style.height = `${Math.min(textarea.scrollHeight, 120)}px`;
+    }
+  };
 
   const handleSend = () => {
     const trimmed = input.trim();
@@ -100,44 +109,45 @@ export default function ChatInterface({
     onSendMessage(question);
   };
 
-  const hasMessages = messages && messages.length > 0;
-
   return (
     <div className="chat-interface">
-      {/* Message area / Welcome */}
-      {hasMessages ? (
-        <div className="chat-messages">
-          {messages.map((msg) => {
-            // Skip rendering loading messages — we show TypingIndicator instead
-            if (msg.isLoading) return null;
-
-            return (
-              <div
-                key={msg.id}
-                className={`chat-message chat-message--${msg.role}`}
-              >
-                <div className="chat-message-bubble">
-                  {msg.role === 'user' ? (
-                    msg.content
-                  ) : msg.isError ? (
-                    <div className="chat-error">{msg.content}</div>
-                  ) : (
-                    <ResponseCard
-                      data={msg.data}
-                      onFollowUpClick={onFollowUpClick}
-                    />
-                  )}
-                </div>
-              </div>
-            );
-          })}
-
-          {isLoading && <TypingIndicator />}
-          <div ref={messagesEndRef} />
+      {messages.length > 0 && onClearChat && (
+        <div className="chat-header-actions">
+          <button className="chat-clear-btn" onClick={onClearChat} title="Clear conversation">
+            <Trash2 size={13} /> Clear Chat
+          </button>
         </div>
-      ) : (
-        <WelcomeScreen onChipClick={handleChipClick} />
       )}
+
+      {/* Messages area */}
+      <div className="chat-messages">
+        {messages.length === 0 ? (
+          <WelcomeScreen onChipClick={handleChipClick} />
+        ) : (
+          messages.map((msg) => (
+            <div
+              key={msg.id}
+              className={`chat-message chat-message--${msg.type}`}
+            >
+              <div className="chat-message-bubble">
+                {msg.type === 'user' ? (
+                  <div className="chat-user-text">{msg.text}</div>
+                ) : msg.error ? (
+                  <div className="chat-error">{msg.error}</div>
+                ) : (
+                  <ResponseCard
+                    data={msg.data}
+                    onFollowUpClick={onFollowUpClick}
+                  />
+                )}
+              </div>
+            </div>
+          ))
+        )}
+
+        {isLoading && <TypingIndicator />}
+        <div ref={messagesEndRef} />
+      </div>
 
       {/* Input area */}
       <div className="chat-input-area">
@@ -145,22 +155,26 @@ export default function ChatInterface({
           <textarea
             ref={textareaRef}
             className="chat-textarea"
-            placeholder="Ask a question about your data..."
+            placeholder="Ask a question about your database (e.g., 'What were top products by profit?')..."
             value={input}
-            onChange={(e) => setInput(e.target.value)}
+            onChange={handleInputChange}
             onKeyDown={handleKeyDown}
-            disabled={isLoading}
             rows={1}
+            disabled={isLoading}
           />
           <button
             className="chat-send-btn"
             onClick={handleSend}
             disabled={!input.trim() || isLoading}
-            title="Send message"
+            title="Run Query (Enter ↵)"
             aria-label="Send message"
           >
-            <Send size={18} />
+            <span className="chat-send-btn-label">Run Query</span>
+            <CornerDownLeft size={14} className="chat-send-btn-icon" />
           </button>
+        </div>
+        <div className="chat-input-hint">
+          <span>Press <strong>Enter ↵</strong> to run query, <strong>Shift + Enter</strong> for a new line</span>
         </div>
       </div>
     </div>
