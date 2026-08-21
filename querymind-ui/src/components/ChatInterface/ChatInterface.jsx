@@ -3,7 +3,7 @@ import { Send, Database, Sparkles, CornerDownLeft, Trash2, Bot } from 'lucide-re
 import ResponseCard from '../ResponseCard/ResponseCard';
 import './ChatInterface.css';
 
-const EXAMPLE_QUESTIONS = [
+const DEFAULT_QUESTIONS = [
   { text: 'Show me the top 5 customers by total spend', category: 'Customers' },
   { text: 'Compare revenue across product categories', category: 'Revenue' },
   { text: 'What were total sales last month by region?', category: 'Sales' },
@@ -29,7 +29,9 @@ function TypingIndicator() {
   );
 }
 
-function WelcomeScreen({ onChipClick }) {
+function WelcomeScreen({ onChipClick, suggestedQuestions }) {
+  const chips = suggestedQuestions && suggestedQuestions.length > 0 ? suggestedQuestions : DEFAULT_QUESTIONS;
+
   return (
     <div className="chat-welcome">
       <div className="chat-welcome-icon-wrapper">
@@ -41,7 +43,7 @@ function WelcomeScreen({ onChipClick }) {
         execute it securely, and return data tables, charts, and business insights.
       </p>
       <div className="chat-welcome-chips">
-        {EXAMPLE_QUESTIONS.map((q, idx) => (
+        {chips.map((q, idx) => (
           <button
             key={idx}
             className="chat-welcome-chip"
@@ -49,7 +51,7 @@ function WelcomeScreen({ onChipClick }) {
           >
             <Sparkles size={12} className="chat-welcome-chip-icon" />
             <span className="chat-welcome-chip-text">{q.text}</span>
-            <span className="chat-welcome-chip-tag">{q.category}</span>
+            {q.category && <span className="chat-welcome-chip-tag">{q.category}</span>}
           </button>
         ))}
       </div>
@@ -63,6 +65,7 @@ export default function ChatInterface({
   isLoading,
   onFollowUpClick,
   onClearChat,
+  suggestedQuestions,
 }) {
   const [input, setInput] = useState('');
   const messagesEndRef = useRef(null);
@@ -122,7 +125,7 @@ export default function ChatInterface({
       {/* Messages area */}
       <div className="chat-messages">
         {messages.length === 0 ? (
-          <WelcomeScreen onChipClick={handleChipClick} />
+          <WelcomeScreen onChipClick={handleChipClick} suggestedQuestions={suggestedQuestions} />
         ) : (
           messages.map((msg) => (
             <div

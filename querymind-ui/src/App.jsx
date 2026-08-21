@@ -15,6 +15,7 @@ export default function App() {
   const [sidebarTab, setSidebarTab] = useState('schema');
   const [messages, setMessages] = useState([]);
   const [schema, setSchema] = useState([]);
+  const [suggestedQuestions, setSuggestedQuestions] = useState([]);
   const [healthStatus, setHealthStatus] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
   const [isInitializing, setIsInitializing] = useState(true);
@@ -45,22 +46,34 @@ export default function App() {
     }
   }, []);
 
-  // ── Fetch Schema ─────────────────────────────
-  const fetchSchema = useCallback(async () => {
+  // ── Fetch Schema & Suggested Questions ───────
+  const fetchSchemaAndQuestions = useCallback(async () => {
     try {
-      const res = await fetch(`${API_BASE}/schema`);
-      const data = await res.json();
-      if (data.tables && Array.isArray(data.tables)) {
-        setSchema(data.tables);
-      } else if (Array.isArray(data)) {
-        setSchema(data);
-      } else if (typeof data === 'object') {
-        setSchema(data);
+      // 1. Fetch Schema
+      const schemaRes = await fetch(`${API_BASE}/schema`);
+      const schemaData = await schemaRes.json();
+      if (schemaData.tables && Array.isArray(schemaData.tables)) {
+        setSchema(schemaData.tables);
+      } else if (Array.isArray(schemaData)) {
+        setSchema(schemaData);
+      } else if (typeof schemaData === 'object') {
+        setSchema(schemaData);
       } else {
         setSchema([]);
       }
     } catch {
       setSchema([]);
+    }
+
+    try {
+      // 2. Fetch AI-Suggested Questions for Welcome Screen
+      const qRes = await fetch(`${API_BASE}/suggested-questions`);
+      const qData = await qRes.json();
+      if (qData.questions && Array.isArray(qData.questions)) {
+        setSuggestedQuestions(qData.questions);
+      }
+    } catch {
+      // Keep defaults
     }
   }, []);
 
@@ -161,11 +174,11 @@ export default function App() {
   // ── Initial Data Fetch ───────────────────────
   useEffect(() => {
     const init = async () => {
-      await Promise.allSettled([fetchHealth(), fetchSchema()]);
+      await Promise.allSettled([fetchHealth(), fetchSchemaAndQuestions()]);
       setIsInitializing(false);
     };
     init();
-  }, [fetchHealth, fetchSchema]);
+  }, [fetchHealth, fetchSchemaAndQuestions]);
 
   // ── Periodic Health Check (every 30s) ────────
   useEffect(() => {
@@ -210,7 +223,7 @@ export default function App() {
             onSelectQuery={handleFollowUpClick}
             activeTab={sidebarTab}
             onTabChange={setSidebarTab}
-            onRefreshSchema={fetchSchema}
+            onRefreshSchema={fetchSchemaAndQuestions}
             onClearHistory={handleClearChat}
           />
         </div>
@@ -222,6 +235,7 @@ export default function App() {
             isLoading={isLoading}
             onFollowUpClick={handleFollowUpClick}
             onClearChat={handleClearChat}
+            suggestedQuestions={suggestedQuestions}
           />
         </main>
       </div>
