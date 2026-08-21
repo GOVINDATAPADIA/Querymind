@@ -110,25 +110,23 @@ async def load_schema(engine: AsyncEngine) -> dict[str, Any]:
 # ---------------------------------------------------------------------------
 
 def format_schema_context(schema: dict[str, Any]) -> str:
-    """Format the schema dict into a compact, human-readable string.
-
-    Example output::
-
-        Table: customers
-        Columns: id (INTEGER, PK), name (VARCHAR), email (VARCHAR)
-        Foreign Keys: none
-    """
+    """Format the schema dictionary into a clean string for prompt injection."""
     if not schema:
-        return "No schema information available."
+        return "No schema available."
+
+    if "tables" in schema and isinstance(schema["tables"], dict):
+        schema = schema["tables"]
 
     parts: list[str] = []
     for table_name, table_info in schema.items():
+        if not isinstance(table_info, dict) or "columns" not in table_info:
+            continue
         col_strs: list[str] = []
         for col in table_info["columns"]:
             label = col["name"]
-            col_type = col["type"]
-            suffix_parts: list[str] = [col_type]
-            if col["primary_key"]:
+            col_type = col.get("type", "TEXT")
+            suffix_parts: list[str] = [str(col_type)]
+            if col.get("primary_key"):
                 suffix_parts.append("PK")
             col_strs.append(f"{label} ({', '.join(suffix_parts)})")
 
@@ -148,7 +146,7 @@ def format_schema_context(schema: dict[str, Any]) -> str:
             f"Foreign Keys: {fk_line}"
         )
 
-    return "\n\n".join(parts)
+    return "\n\n".join(parts) if parts else "No schema available."
 
 
 # ---------------------------------------------------------------------------
@@ -160,14 +158,12 @@ async def get_relevant_tables(
     question: str,
     top_k: int = 5,
 ) -> dict[str, Any]:
-    """Return a subset of the schema containing only tables relevant to *question*.
-
-    Uses simple keyword matching against table names, column names, and
-    foreign-key references.  This keeps the LLM context window small on
-    large databases.
-    """
+    """Return a subset of the schema containing only tables relevant to *question*."""
     if not schema:
         return {}
+
+    was_wrapped = "tables" in schema and isinstance(schema["tables"], dict)
+    tables_dict = schema["tables"] if was_wrapped else schema
 
     # Normalise question tokens for case-insensitive matching
     question_lower = question.lower()
@@ -175,7 +171,9 @@ async def get_relevant_tables(
 
     scored: list[tuple[str, int, dict[str, Any]]] = []
 
-    for table_name, table_info in schema.items():
+    for table_name, table_info in tables_dict.items():
+        if not isinstance(table_info, dict):
+            continue
         score = 0
         table_lower = table_name.lower()
 
@@ -193,32 +191,39 @@ async def get_relevant_tables(
         score += len(overlap) * 3
 
         # Column name mentions
-        for col in table_info["columns"]:
+        for col in table_info.get("columns", []):
             col_lower = col["name"].lower()
             if col_lower in question_lower:
                 score += 4
             col_parts = set(col_lower.split("_"))
-            col_overlap = tokens & col_parts
-            score += len(col_overlap) * 2
+            if tokens & col_parts:
+                score += 2
 
-        # Foreign-key referred table mentions
+        # Foreign-key reference mentions
         for fk in table_info.get("foreign_keys", []):
-            if fk["referred_table"].lower() in question_lower:
+            ref_lower = fk.get("referred_table", "").lower()
+            if ref_lower in question_lower:
                 score += 3
 
-        if score > 0:
-            scored.append((table_name, score, table_info))
+        scored.append((table_name, score, table_info))
 
-    # Sort descending by score, take top_k
-    scored.sort(key=lambda x: x[1], reverse=True)
-    top = scored[:top_k]
+    # Sort descending by score; if all scores are 0, return all tables (capped at top_k)
+    scored.sort(key=lambda item: item[1], reverse=True)
 
-    # If nothing matched, return everything (small DB) or first top_k tables
-    if not top:
-        table_names = list(schema.keys())[:top_k]
-        return {t: schema[t] for t in table_names}
+    selected: dict[str, Any] = {}
+    for table_name, _, table_info in scored[:top_k]:
+        selected[table_name] = table_info
 
-    return {name: info for name, _, info in top}
+    # Secondary pass: pull in tables referenced by foreign keys of selected tables
+    fk_additions: dict[str, Any] = {}
+    for table_info in selected.values():
+        for fk in table_info.get("foreign_keys", []):
+            ref_table = fk.get("referred_table", "")
+            if ref_table in tables_dict and ref_table not in selected:
+                fk_additions[ref_table] = tables_dict[ref_table]
+
+    selected.update(fk_additions)
+    return {"tables": selected} if was_wrapped else selected
 
 
 # ---------------------------------------------------------------------------

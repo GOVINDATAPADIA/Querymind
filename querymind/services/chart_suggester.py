@@ -76,27 +76,60 @@ def suggest_chart(df: pd.DataFrame, question: str = "") -> dict | None:
             "data": data,
         }
 
-    # ── 1 datetime + 1 numeric → line chart ─────────────────────────────
+    q_lower = (question or "").lower()
+    pie_keywords = ("share", "percent", "distribution", "breakdown", "proportion", "ratio", "split", "pie")
+
+    # ── 1 datetime + 1 numeric → area / line chart ─────────────────────
     if len(datetime_cols) >= 1 and len(numeric_cols) >= 1:
         x_col = datetime_cols[0]
         y_col = numeric_cols[0]
+        chart_type = "area" if "area" in q_lower else "line"
         return {
-            "type": "line",
+            "type": chart_type,
             "x": x_col,
             "y": y_col,
-            "title": f"{y_col} over time",
+            "columns": [x_col, y_col],
+            "title": f"{y_col.replace('_', ' ').title()} over time ({x_col})",
             "data": data,
         }
 
-    # ── 1 categorical + 1 numeric → bar chart ───────────────────────────
+    # ── 1 categorical + 1 numeric → bar or pie chart ────────────────────
     if len(categorical_cols) >= 1 and len(numeric_cols) >= 1:
         x_col = categorical_cols[0]
         y_col = numeric_cols[0]
+        
+        # Suggest pie chart if small set of categories and asks for share/breakdown
+        if (len(df) <= 6 and any(k in q_lower for k in pie_keywords)) or (len(df) <= 5 and "category" in x_col.lower()):
+            return {
+                "type": "pie",
+                "x": x_col,
+                "y": y_col,
+                "nameKey": x_col,
+                "dataKey": y_col,
+                "columns": [x_col, y_col],
+                "title": f"{y_col.replace('_', ' ').title()} Distribution by {x_col.replace('_', ' ').title()}",
+                "data": data,
+            }
+
         return {
             "type": "bar",
             "x": x_col,
             "y": y_col,
-            "title": f"{y_col} by {x_col}",
+            "columns": [x_col, y_col],
+            "title": f"{y_col.replace('_', ' ').title()} by {x_col.replace('_', ' ').title()}",
+            "data": data,
+        }
+
+    # ── 1 categorical + 2+ numeric → multi-bar chart ────────────────────
+    if len(categorical_cols) >= 1 and len(numeric_cols) >= 2:
+        x_col = categorical_cols[0]
+        return {
+            "type": "bar",
+            "x": x_col,
+            "y": numeric_cols[0],
+            "y_series": numeric_cols[:3],
+            "columns": [x_col] + numeric_cols[:3],
+            "title": f"Metrics by {x_col.replace('_', ' ').title()}",
             "data": data,
         }
 
@@ -105,36 +138,16 @@ def suggest_chart(df: pd.DataFrame, question: str = "") -> dict | None:
         x_col = numeric_cols[0]
         y_col = numeric_cols[1]
         return {
-            "type": "scatter",
+            "type": "bar",
             "x": x_col,
             "y": y_col,
+            "columns": [x_col, y_col],
             "title": f"{y_col} vs {x_col}",
             "data": data,
         }
 
-    # ── Fallback: table view for 3+ mixed columns ───────────────────────
+    # ── Fallback: table view ─────────────────────────────────────────────
     all_cols = list(df.columns)
-    if len(all_cols) >= 3:
-        return {
-            "type": "table",
-            "columns": all_cols,
-            "title": "Query Results",
-            "data": data,
-        }
-
-    # ── Single row, multiple columns — treat as stat card ────────────────
-    if len(df) == 1:
-        col_name = df.columns[0]
-        value = df.iloc[0, 0]
-        return {
-            "type": "stat_card",
-            "value": value,
-            "label": col_name,
-            "title": "Summary",
-            "data": data,
-        }
-
-    # ── Nothing matched — generic table ──────────────────────────────────
     return {
         "type": "table",
         "columns": all_cols if len(all_cols) >= 1 else list(df.columns),

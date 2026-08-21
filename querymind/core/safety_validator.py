@@ -278,7 +278,7 @@ def sanitize_sql_output(sql: str) -> str:
     if start_idx != -1:
         cleaned = cleaned[start_idx:]
 
-    # 4. Remove trailing semicolons
-    cleaned = cleaned.rstrip(";").strip()
+    # 4. Remove trailing semicolons and stray backticks
+    cleaned = cleaned.rstrip(";").strip("`").strip()
 
     return cleaned

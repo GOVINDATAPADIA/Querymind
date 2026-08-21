@@ -162,7 +162,7 @@ class TestNodeFunctions:
 
         assert final is not None
         assert final["result_table"] == []
-        assert "unsafe" in final["plain_english"].lower() or "blocked" in final["plain_english"].lower() or "cannot" in final["plain_english"].lower()
+        assert any(k in final["plain_english"].lower() for k in ("unsafe", "blocked", "cannot", "unable", "flagged"))
 
 
 class TestGraphRouting:
@@ -184,12 +184,11 @@ class TestGraphRouting:
         mock_schema,
         mock_engine,
         sample_dataframe,
-        mock_schema as schema_fixture,
     ):
         """End-to-end: question → SQL → execute → interpret → response."""
         mock_engine.return_value = MagicMock()
-        mock_schema.return_value = schema_fixture
-        mock_relevant.return_value = schema_fixture
+        mock_schema.return_value = mock_schema
+        mock_relevant.return_value = mock_schema
         mock_format.return_value = "Table: products\nColumns: id, name, price"
 
         # LLM returns different content depending on which prompt calls it

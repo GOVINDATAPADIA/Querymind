@@ -36,9 +36,13 @@ async def get_schema() -> SchemaResponse:
     relationships: list[dict[str, str]] = []
     total_columns = 0
 
-    for table_name, table_info in schema.get("tables", {}).items():
+    tables_dict = schema.get("tables", {}) if (isinstance(schema, dict) and "tables" in schema) else (schema if isinstance(schema, dict) else {})
+
+    for table_name, table_info in tables_dict.items():
+        if not isinstance(table_info, dict):
+            continue
         columns = [
-            {"name": col["name"], "type": col["type"]}
+            {"name": col["name"], "type": str(col.get("type", "TEXT"))}
             for col in table_info.get("columns", [])
         ]
         total_columns += len(columns)
