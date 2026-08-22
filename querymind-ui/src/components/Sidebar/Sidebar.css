@@ -20,7 +20,7 @@
   flex-shrink: 0;
   padding: 6px 8px 0;
   gap: 6px;
-  background: rgba(13, 13, 20, 0.4);
+  background: var(--bg-tertiary);
 }
 
 .sidebar-tab {
@@ -30,7 +30,7 @@
   font-weight: 600;
   letter-spacing: 0.8px;
   text-transform: uppercase;
-  color: var(--text-muted);
+  color: var(--text-secondary);
   background: transparent;
   border: none;
   border-bottom: 2px solid transparent;
@@ -43,15 +43,15 @@
 }
 
 .sidebar-tab:hover {
-  color: var(--text-secondary);
-  background: rgba(255, 255, 255, 0.02);
+  color: var(--text-primary);
+  background: var(--bg-hover);
 }
 
 .sidebar-tab--active {
   color: var(--neon-green);
   border-bottom-color: var(--neon-green);
-  background: rgba(0, 255, 136, 0.04);
-  text-shadow: 0 0 12px rgba(0, 255, 136, 0.3);
+  background: var(--bg-secondary);
+  font-weight: 700;
 }
 
 .sidebar-content {
@@ -339,7 +339,7 @@
 .schema-columns {
   padding: 6px 0;
   border-top: 1px solid var(--border-subtle);
-  background: rgba(6, 6, 11, 0.5);
+  background: var(--bg-primary);
   animation: fadeIn 0.15s ease;
 }
 

@@ -80,38 +80,38 @@
    2. Light Theme Overrides
    ────────────────────────────────────────────── */
 [data-theme='light'] {
-  --bg-primary: #f4f4f9;
+  --bg-primary: #f5f5fa;
   --bg-secondary: #ffffff;
-  --bg-tertiary: #e8e8f0;
-  --bg-hover: #dcdce8;
-  --bg-input: #f0f0f6;
-  --bg-glass: rgba(255, 255, 255, 0.9);
+  --bg-tertiary: #ebebf4;
+  --bg-hover: #dedee8;
+  --bg-input: #f0f0f8;
+  --bg-glass: rgba(255, 255, 255, 0.92);
 
-  --neon-green: #00b368;
-  --neon-cyan: #0090b8;
-  --neon-blue: #3a6ae8;
-  --neon-purple: #8a30cc;
+  --neon-green: #00874e;
+  --neon-cyan: #007799;
+  --neon-blue: #2d5ac8;
+  --neon-purple: #7822ba;
 
-  --text-primary: #1a1a2e;
-  --text-secondary: #555577;
-  --text-muted: #9999aa;
+  --text-primary: #121224;
+  --text-secondary: #3b3b55;
+  --text-muted: #5e5e78;
 
-  --border-color: #d8d8e6;
-  --border-default: #d8d8e6;
-  --border-subtle: #e4e4ef;
-  --border-accent: rgba(0, 179, 104, 0.2);
+  --border-color: #d2d2e2;
+  --border-default: #d2d2e2;
+  --border-subtle: #e2e2ee;
+  --border-accent: rgba(0, 135, 78, 0.3);
 
-  --danger: #e03e4e;
-  --warning: #d48800;
-  --success: #00b368;
+  --danger: #d63031;
+  --warning: #c67d00;
+  --success: #00874e;
 
-  --shadow-neon: 0 0 12px rgba(0, 179, 104, 0.06);
-  --shadow-card: 0 2px 16px rgba(0, 0, 0, 0.06), 0 0 1px rgba(0, 0, 0, 0.08);
+  --shadow-neon: 0 0 12px rgba(0, 135, 78, 0.08);
+  --shadow-card: 0 2px 16px rgba(0, 0, 0, 0.06), 0 0 1px rgba(0, 0, 0, 0.1);
   --shadow-elevated: 0 4px 24px rgba(0, 0, 0, 0.1);
-  --glow-green: 0 0 8px rgba(0, 179, 104, 0.1);
-  --glow-green-strong: 0 0 16px rgba(0, 179, 104, 0.15);
+  --glow-green: 0 0 8px rgba(0, 135, 78, 0.15);
+  --glow-green-strong: 0 0 16px rgba(0, 135, 78, 0.2);
   --glow-text-green: none;
-  --glow-border-bottom: 0 1px 8px rgba(0, 0, 0, 0.04);
+  --glow-border-bottom: 0 1px 8px rgba(0, 0, 0, 0.05);
 }
 
 /* ──────────────────────────────────────────────
