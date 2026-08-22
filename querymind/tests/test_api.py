@@ -143,3 +143,37 @@ class TestQueryEndpoint:
     async def test_query_422_on_short_question(self, client):
         response = await client.post("/query", json={"question": "Hi"})
         assert response.status_code == 422
+
+
+class TestUploadEndpoint:
+    """Test POST /upload-csv."""
+
+    @pytest.mark.asyncio
+    async def test_upload_csv_success(self, client):
+        csv_content = b"name,price,quantity\nWidget,19.99,10\nGadget,29.99,5\n"
+        files = {"file": ("test_products.csv", csv_content, "text/csv")}
+
+        with patch("api.routes.upload.get_engine") as mock_eng:
+            mock_conn = AsyncMock()
+            mock_conn.run_sync = AsyncMock()
+            mock_eng.return_value.begin.return_value.__aenter__.return_value = mock_conn
+
+            response = await client.post("/upload-csv", files=files)
+            assert response.status_code == 200
+            data = response.json()
+            assert data["status"] == "success"
+            assert data["table_name"] == "test_products"
+            assert data["row_count"] == 2
+            assert data["column_count"] == 3
+
+    @pytest.mark.asyncio
+    async def test_upload_invalid_format(self, client):
+        files = {"file": ("document.pdf", b"fake pdf content", "application/pdf")}
+        response = await client.post("/upload-csv", files=files)
+        assert response.status_code == 400
+
+    @pytest.mark.asyncio
+    async def test_upload_empty_file(self, client):
+        files = {"file": ("empty.csv", b"", "text/csv")}
+        response = await client.post("/upload-csv", files=files)
+        assert response.status_code == 400

@@ -56,3 +56,16 @@
 2026-08-21 21:57:02,893 | WARNING | BLOCKED | risk=critical | time=2026-08-21T16:27:02.893304+00:00 | reason=SQL line-comment injection (--) detected | sql=SELECT * FROM customers -- WHERE id = 1
 2026-08-21 21:57:02,901 | WARNING | BLOCKED | risk=critical | time=2026-08-21T16:27:02.901924+00:00 | reason=Only SELECT statements are allowed (got UNKNOWN). | sql=EXEC xp_cmdshell 'dir'
 2026-08-21 21:57:02,914 | WARNING | BLOCKED | risk=critical | time=2026-08-21T16:27:02.914146+00:00 | reason=Dangerous pattern detected: \bINTO\s+OUTFILE\b | sql=SELECT * FROM customers INTO OUTFILE '/tmp/data.csv'
+2026-08-22 16:47:20,200 | WARNING | BLOCKED | risk=critical | time=2026-08-22T11:17:20.200311+00:00 | reason=Only SELECT statements are allowed (got DROP). | sql=DROP TABLE customers
+2026-08-22 16:47:20,583 | WARNING | BLOCKED | risk=critical | time=2026-08-22T11:17:20.583589+00:00 | reason=Only SELECT statements are allowed (got DROP). | sql=DROP TABLE customers
+2026-08-22 16:47:20,585 | WARNING | BLOCKED | risk=critical | time=2026-08-22T11:17:20.585968+00:00 | reason=Only SELECT statements are allowed (got ALTER). | sql=ALTER TABLE customers ADD COLUMN hacked VARCHAR(100)
+2026-08-22 16:47:20,589 | WARNING | BLOCKED | risk=critical | time=2026-08-22T11:17:20.589834+00:00 | reason=Only SELECT statements are allowed (got TRUNCATE). | sql=TRUNCATE TABLE customers
+2026-08-22 16:47:20,593 | WARNING | BLOCKED | risk=critical | time=2026-08-22T11:17:20.593421+00:00 | reason=Only SELECT statements are allowed (got CREATE). | sql=CREATE TABLE hacked (id INT)
+2026-08-22 16:47:20,599 | WARNING | BLOCKED | risk=critical | time=2026-08-22T11:17:20.599438+00:00 | reason=Only SELECT statements are allowed (got DELETE). | sql=DELETE FROM customers WHERE id = 1
+2026-08-22 16:47:20,606 | WARNING | BLOCKED | risk=critical | time=2026-08-22T11:17:20.606490+00:00 | reason=Only SELECT statements are allowed (got UPDATE). | sql=UPDATE customers SET name = 'hacked' WHERE id = 1
+2026-08-22 16:47:20,614 | WARNING | BLOCKED | risk=critical | time=2026-08-22T11:17:20.613781+00:00 | reason=Only SELECT statements are allowed (got INSERT). | sql=INSERT INTO customers (name, email) VALUES ('test', 'test@test.com')
+2026-08-22 16:47:20,625 | WARNING | BLOCKED | risk=critical | time=2026-08-22T11:17:20.625248+00:00 | reason=UNION SELECT injection detected | sql=SELECT name FROM customers UNION SELECT password FROM users
+2026-08-22 16:47:20,630 | WARNING | BLOCKED | risk=critical | time=2026-08-22T11:17:20.630853+00:00 | reason=Only SELECT statements are allowed (got DROP). | sql=SELECT * FROM customers; DROP TABLE customers
+2026-08-22 16:47:20,637 | WARNING | BLOCKED | risk=critical | time=2026-08-22T11:17:20.637241+00:00 | reason=SQL line-comment injection (--) detected | sql=SELECT * FROM customers -- WHERE id = 1
+2026-08-22 16:47:20,642 | WARNING | BLOCKED | risk=critical | time=2026-08-22T11:17:20.642065+00:00 | reason=Only SELECT statements are allowed (got UNKNOWN). | sql=EXEC xp_cmdshell 'dir'
+2026-08-22 16:47:20,645 | WARNING | BLOCKED | risk=critical | time=2026-08-22T11:17:20.645643+00:00 | reason=Dangerous pattern detected: \bINTO\s+OUTFILE\b | sql=SELECT * FROM customers INTO OUTFILE '/tmp/data.csv'

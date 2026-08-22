@@ -16,7 +16,7 @@ from pythonjsonlogger import jsonlogger
 
 from config import get_settings
 from db.connection import get_engine, dispose_engine, check_db_health
-from api.routes import health, schema, query
+from api.routes import health, schema, query, upload
 
 
 # ── Structured JSON Logging ──────────────────────────────────────
@@ -126,3 +126,4 @@ async def general_exception_handler(request: Request, exc: Exception):
 app.include_router(health.router)
 app.include_router(schema.router)
 app.include_router(query.router)
+app.include_router(upload.router)

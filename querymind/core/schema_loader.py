@@ -250,3 +250,11 @@ async def get_cached_schema(engine: AsyncEngine) -> dict[str, Any]:
     _schema_cache["schema"] = schema
     _schema_cache["timestamp"] = now
     return schema
+
+
+def invalidate_schema_cache() -> None:
+    """Clear the in-memory schema cache to force re-introspection."""
+    global _schema_cache
+    _schema_cache["schema"] = {}
+    _schema_cache["timestamp"] = 0.0
+    logger.info("Schema cache invalidated.")
