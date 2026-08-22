@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
-import { Send, Database, Sparkles, CornerDownLeft, Trash2, Bot } from 'lucide-react';
+import { Send, Database, Sparkles, CornerDownLeft, Trash2, Bot, Paperclip } from 'lucide-react';
 import ResponseCard from '../ResponseCard/ResponseCard';
 import './ChatInterface.css';
 
@@ -66,6 +66,7 @@ export default function ChatInterface({
   onFollowUpClick,
   onClearChat,
   suggestedQuestions,
+  onOpenUpload,
 }) {
   const [input, setInput] = useState('');
   const messagesEndRef = useRef(null);
@@ -155,6 +156,17 @@ export default function ChatInterface({
       {/* Input area */}
       <div className="chat-input-area">
         <div className="chat-input-wrapper">
+          {onOpenUpload && (
+            <button
+              className="chat-attach-btn"
+              onClick={onOpenUpload}
+              title="Upload CSV / Excel Dataset"
+              type="button"
+            >
+              <Paperclip size={16} />
+            </button>
+          )}
+
           <textarea
             ref={textareaRef}
             className="chat-textarea"

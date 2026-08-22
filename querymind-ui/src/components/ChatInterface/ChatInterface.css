@@ -246,6 +246,28 @@
   box-shadow: 0 0 24px rgba(0, 255, 136, 0.1), 0 4px 24px rgba(0, 0, 0, 0.5);
 }
 
+.chat-attach-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  border: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  margin-bottom: 2px;
+  flex-shrink: 0;
+  transition: all var(--transition-fast);
+}
+
+.chat-attach-btn:hover {
+  color: var(--neon-cyan);
+  background: rgba(0, 229, 255, 0.1);
+  transform: scale(1.08);
+}
+
 .chat-textarea {
   flex: 1;
   resize: none;

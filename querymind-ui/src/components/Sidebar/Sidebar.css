@@ -60,6 +60,60 @@
   padding: 10px 0;
 }
 
+/* ---- Upload Banner ---- */
+.schema-upload-banner {
+  padding: 0 12px 10px;
+}
+
+.schema-upload-btn {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 8px 12px;
+  border-radius: var(--radius-sm);
+  background: linear-gradient(135deg, rgba(0, 255, 136, 0.1), rgba(0, 229, 255, 0.08));
+  border: 1px dashed rgba(0, 255, 136, 0.4);
+  color: var(--neon-green);
+  font-size: 0.78rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.schema-upload-btn:hover {
+  background: linear-gradient(135deg, rgba(0, 255, 136, 0.2), rgba(0, 229, 255, 0.15));
+  border-color: var(--neon-green);
+  box-shadow: 0 0 16px rgba(0, 255, 136, 0.15);
+  transform: translateY(-1px);
+}
+
+.schema-upload-btn-icon {
+  color: var(--neon-green);
+}
+
+.schema-upload-primary-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 16px;
+  margin-top: 8px;
+  background: linear-gradient(135deg, var(--neon-green), var(--neon-cyan));
+  color: #06060b;
+  border-radius: var(--radius-sm);
+  font-size: 0.78rem;
+  font-weight: 600;
+  border: none;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.schema-upload-primary-btn:hover {
+  box-shadow: var(--glow-green);
+  transform: scale(1.03);
+}
+
 /* ---- Toolbar & Search ---- */
 .schema-toolbar,
 .history-toolbar {

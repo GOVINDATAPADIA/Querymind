@@ -11,11 +11,12 @@ import {
   Trash2,
   ChevronsUpDown,
   RotateCw,
+  UploadCloud,
 } from 'lucide-react';
 import './Sidebar.css';
 
 /* ---- Schema Explorer ---- */
-function SchemaExplorer({ schema, onRefreshSchema }) {
+function SchemaExplorer({ schema, onRefreshSchema, onOpenUpload }) {
   const [search, setSearch] = useState('');
   const [expanded, setExpanded] = useState({});
 
@@ -63,7 +64,14 @@ function SchemaExplorer({ schema, onRefreshSchema }) {
       <div className="schema-empty">
         <DatabaseZap size={32} className="schema-empty-icon" />
         <span className="schema-empty-title">No schema loaded</span>
-        <span className="schema-empty-desc">Connect a database or refresh to inspect tables</span>
+        <span className="schema-empty-desc">Upload your CSV dataset or refresh to inspect tables</span>
+        
+        {onOpenUpload && (
+          <button className="schema-upload-primary-btn" onClick={onOpenUpload}>
+            <UploadCloud size={14} /> Upload CSV / Excel
+          </button>
+        )}
+
         {onRefreshSchema && (
           <button className="schema-refresh-btn" onClick={onRefreshSchema}>
             <RotateCw size={13} /> Refresh Schema
@@ -75,6 +83,15 @@ function SchemaExplorer({ schema, onRefreshSchema }) {
 
   return (
     <div className="schema-explorer">
+      {onOpenUpload && (
+        <div className="schema-upload-banner">
+          <button className="schema-upload-btn" onClick={onOpenUpload}>
+            <UploadCloud size={14} className="schema-upload-btn-icon" />
+            <span>Upload CSV / Excel Dataset</span>
+          </button>
+        </div>
+      )}
+
       <div className="schema-toolbar">
         <div className="schema-search-box">
           <Search size={14} className="schema-search-icon" />
@@ -219,6 +236,7 @@ export default function Sidebar({
   onTabChange,
   onRefreshSchema,
   onClearHistory,
+  onOpenUpload,
 }) {
   return (
     <aside className={`sidebar ${isOpen ? 'sidebar--open' : ''}`}>
@@ -241,7 +259,11 @@ export default function Sidebar({
 
       <div className="sidebar-content">
         {activeTab === 'schema' ? (
-          <SchemaExplorer schema={schema} onRefreshSchema={onRefreshSchema} />
+          <SchemaExplorer
+            schema={schema}
+            onRefreshSchema={onRefreshSchema}
+            onOpenUpload={onOpenUpload}
+          />
         ) : (
           <HistoryList
             messages={messages}

@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import Header from './components/Header/Header';
 import Sidebar from './components/Sidebar/Sidebar';
 import ChatInterface from './components/ChatInterface/ChatInterface';
+import UploadModal from './components/UploadModal/UploadModal';
 import './App.css';
 
 const API_BASE = 'https://query-backend.up.railway.app';
@@ -19,6 +20,7 @@ export default function App() {
   const [healthStatus, setHealthStatus] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
   const [isInitializing, setIsInitializing] = useState(true);
+  const [isUploadOpen, setIsUploadOpen] = useState(false);
 
   // ── Theme Toggle ─────────────────────────────
   const toggleTheme = useCallback(() => {
@@ -76,6 +78,28 @@ export default function App() {
       // Keep defaults
     }
   }, []);
+
+  // ── Dataset Upload Success Handler ───────────
+  const handleUploadSuccess = useCallback(
+    async (uploadResult) => {
+      // Refetch schema and dynamic questions immediately
+      await fetchSchemaAndQuestions();
+
+      // Post success notification in chat
+      const timeStr = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+      const systemMessage = {
+        id: Date.now(),
+        type: 'assistant',
+        role: 'assistant',
+        text: `✅ Successfully imported table **${uploadResult.table_name}** with ${uploadResult.row_count.toLocaleString()} rows and ${uploadResult.column_count} columns! You can now ask questions about this dataset in plain English.`,
+        content: `✅ Successfully imported table **${uploadResult.table_name}** with ${uploadResult.row_count.toLocaleString()} rows and ${uploadResult.column_count} columns! You can now ask questions about this dataset in plain English.`,
+        timestamp: timeStr,
+      };
+
+      setMessages((prev) => [...prev, systemMessage]);
+    },
+    [fetchSchemaAndQuestions]
+  );
 
   // ── Send Query ───────────────────────────────
   const sendQuery = useCallback(async (question) => {
@@ -225,6 +249,7 @@ export default function App() {
             onTabChange={setSidebarTab}
             onRefreshSchema={fetchSchemaAndQuestions}
             onClearHistory={handleClearChat}
+            onOpenUpload={() => setIsUploadOpen(true)}
           />
         </div>
 
@@ -236,9 +261,18 @@ export default function App() {
             onFollowUpClick={handleFollowUpClick}
             onClearChat={handleClearChat}
             suggestedQuestions={suggestedQuestions}
+            onOpenUpload={() => setIsUploadOpen(true)}
           />
         </main>
       </div>
+
+      {/* Dataset Upload Modal */}
+      <UploadModal
+        isOpen={isUploadOpen}
+        onClose={() => setIsUploadOpen(false)}
+        onUploadSuccess={handleUploadSuccess}
+        apiBase={API_BASE}
+      />
     </div>
   );
 }
